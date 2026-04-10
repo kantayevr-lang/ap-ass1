@@ -3,7 +3,10 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"log"
 	"payment-service/internal/domain"
+
+	"github.com/google/uuid"
 )
 
 type PostgresPaymentRepository struct {
@@ -15,9 +18,23 @@ func NewPostgresPaymentRepository(db *sql.DB) *PostgresPaymentRepository {
 }
 
 func (r *PostgresPaymentRepository) Save(ctx context.Context, p *domain.Payment) error {
+	if p.ID == "" {
+		p.ID = uuid.New().String()
+	}
+
+	if p.Status == "" {
+		p.Status = "pending"
+	}
+
 	query := `INSERT INTO payments (id, order_id, transaction_id, amount, status) 
               VALUES ($1, $2, $3, $4, $5)`
 	_, err := r.db.ExecContext(ctx, query, p.ID, p.OrderID, p.TransactionID, p.Amount, p.Status)
+
+	if err != nil {
+		log.Println("DB ERROR:", err)
+		return err
+	}
+
 	return err
 }
 

@@ -17,6 +17,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if err := db.Ping(); err != nil {
+		log.Fatal("DB connection failed:", err)
+	}
+
 	repo := repository.NewPostgresPaymentRepository(db)
 	uc := usecase.NewPaymentUseCase(repo)
 	handler := http.NewPaymentHandler(uc)

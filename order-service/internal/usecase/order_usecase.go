@@ -30,7 +30,8 @@ func (u *OrderUseCase) CreateOrder(ctx context.Context, ord *domain.Order) error
 
 	status, err := u.paymentClient.Pay(ctx, ord.ID, ord.Amount)
 	if err != nil {
-		u.repo.UpdateStatus(ctx, ord.ID, domain.StatusFailed)
+		ord.Status = domain.StatusFailed
+		u.repo.UpdateStatus(ctx, ord.ID, ord.Status)
 		return err
 	}
 
@@ -39,7 +40,8 @@ func (u *OrderUseCase) CreateOrder(ctx context.Context, ord *domain.Order) error
 		finalStatus = domain.StatusPaid
 	}
 
-	return u.repo.UpdateStatus(ctx, ord.ID, finalStatus)
+	ord.Status = finalStatus
+	return u.repo.UpdateStatus(ctx, ord.ID, ord.Status)
 }
 
 func (u *OrderUseCase) CancelOrder(ctx context.Context, id string) error {

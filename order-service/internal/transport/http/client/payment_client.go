@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"order-service/internal/domain"
 	"time"
 )
 
@@ -40,7 +41,7 @@ func (c *PaymentServiceClient) Pay(ctx context.Context, orderID string, amount i
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("payment service unavailable: %w", err)
+		return "", fmt.Errorf("%w: %v", domain.ErrPaymentServiceDown, err)
 	}
 	defer resp.Body.Close()
 

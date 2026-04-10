@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 	"order-service/internal/domain"
 	"order-service/internal/usecase"
@@ -38,7 +39,11 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	err := h.useCase.CreateOrder(c.Request.Context(), order)
 	if err != nil {
-		if err == domain.ErrPaymentServiceDown {
+		if errors.Is(err, domain.ErrInvalidAmount) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if errors.Is(err, domain.ErrPaymentServiceDown) {
 			c.JSON(http.StatusServiceUnavailable, gin.H{"error": err.Error()})
 			return
 		}
@@ -53,11 +58,15 @@ func (h *OrderHandler) CancelOrder(c *gin.Context) {
 	id := c.Param("id")
 	err := h.useCase.CancelOrder(c.Request.Context(), id)
 	if err != nil {
-		if err == domain.ErrCannotCancelOrder {
+		if errors.Is(err, domain.ErrCannotCancelOrder) {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		if errors.Is(err, domain.ErrOrderNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "cancelled"})
