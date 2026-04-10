@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"order-service/internal/domain"
 	"order-service/internal/usecase"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -70,4 +71,31 @@ func (h *OrderHandler) CancelOrder(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "cancelled"})
+}
+
+func (h *OrderHandler) ListOrders(c *gin.Context) {
+	minAmount, err := strconv.ParseInt(c.DefaultQuery("min_amount", "0"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid min_amount"})
+		return
+	}
+
+	maxAmount, err := strconv.ParseInt(c.DefaultQuery("max_amount", "9223372036854775807"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid max_amount"})
+		return
+	}
+
+	if minAmount > maxAmount {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "min_amount cannot be greater than max_amount"})
+		return
+	}
+
+	orders, err := h.useCase.ListOrdersByAmount(c.Request.Context(), minAmount, maxAmount)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, orders)
 }

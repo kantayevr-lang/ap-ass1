@@ -33,6 +33,34 @@ func (r *PostgresOrderRepository) GetByID(ctx context.Context, id string) (*doma
 	return &ord, err
 }
 
+func (r *PostgresOrderRepository) ListByAmountRange(ctx context.Context, minAmount, maxAmount int64) ([]domain.Order, error) {
+	query := `SELECT id, customer_id, item_name, amount, status, created_at
+		FROM orders
+		WHERE amount >= $1 AND amount <= $2
+		ORDER BY created_at DESC`
+
+	rows, err := r.db.QueryContext(ctx, query, minAmount, maxAmount)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var orders []domain.Order
+	for rows.Next() {
+		var ord domain.Order
+		if err := rows.Scan(&ord.ID, &ord.CustomerID, &ord.ItemName, &ord.Amount, &ord.Status, &ord.CreatedAt); err != nil {
+			return nil, err
+		}
+		orders = append(orders, ord)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
 func (r *PostgresOrderRepository) UpdateStatus(ctx context.Context, id string, status string) error {
 	query := `UPDATE orders SET status = $1 WHERE id = $2`
 	_, err := r.db.ExecContext(ctx, query, status, id)

@@ -2,18 +2,18 @@ version: '3.8'
 
 services:
   order_db:
-    image: postgres:15
+    image: postgres:18
     environment:
-      POSTGRES_USER: user
+      POSTGRES_USER: student
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: order_db
     ports:
       - "5432:5432"
 
   payment_db:
-    image: postgres:15
+    image: postgres:18
     environment:
-      POSTGRES_USER: user
+      POSTGRES_USER: student
       POSTGRES_PASSWORD: pass
       POSTGRES_DB: payment_db
     ports:

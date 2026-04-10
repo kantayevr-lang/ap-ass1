@@ -56,3 +56,7 @@ func (u *OrderUseCase) CancelOrder(ctx context.Context, id string) error {
 
 	return u.repo.UpdateStatus(ctx, id, domain.StatusCancelled)
 }
+
+func (u *OrderUseCase) ListOrdersByAmount(ctx context.Context, minAmount, maxAmount int64) ([]domain.Order, error) {
+	return u.repo.ListByAmountRange(ctx, minAmount, maxAmount)
+}
